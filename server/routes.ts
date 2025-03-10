@@ -202,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Consolidate proposal update routes into a single handler
+  // Update proposal status (for both freelancer and business)
   app.patch("/api/proposals/:id", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -211,15 +211,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const proposalId = parseInt(req.params.id);
     const { status } = req.body;
 
-    const validStatuses = ["applied", "under_review", "approved", "rejected", "waitlist", "pending_freelancer"];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
-    }
-
     try {
-      const proposal = await storage.updateProposal(proposalId, { status });
-      res.json(proposal);
+      // Get the proposal to check permissions
+      const proposal = await storage.getProposalsByJob(proposalId);
+      if (!proposal) {
+        return res.status(404).json({ message: "Proposal not found" });
+      }
+
+      if (req.user.role === "freelancer") {
+        // Freelancers can only accept or reject pending proposals
+        if (!["approved", "rejected"].includes(status)) {
+          return res.status(400).json({ message: "Invalid status for freelancer" });
+        }
+
+        if (status === "rejected") {
+          // Delete rejected proposals
+          await storage.deleteProposal(proposalId);
+          return res.json({ message: "Proposal rejected and removed" });
+        }
+      } else if (req.user.role === "business") {
+        // Businesses can update to these statuses
+        const validStatuses = ["applied", "under_review", "approved", "rejected", "waitlist"];
+        if (!validStatuses.includes(status)) {
+          return res.status(400).json({ message: "Invalid status" });
+        }
+      }
+
+      const updatedProposal = await storage.updateProposal(proposalId, { status });
+      res.json(updatedProposal);
     } catch (error) {
+      console.error("Error updating proposal:", error);
       res.status(500).json({ message: "Error updating proposal" });
     }
   });

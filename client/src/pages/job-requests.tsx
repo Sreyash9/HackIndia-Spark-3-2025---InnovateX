@@ -70,54 +70,61 @@ export default function JobRequests() {
           {jobRequests.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No job requests yet</p>
           ) : (
-            jobRequests.map((request: JobRequest) => (
-              <Card key={request.id}>
-                <CardHeader>
-                  <CardTitle>{request.job.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">From {request.business.displayName}</p>
-                      <p className="mt-2">{request.job.description}</p>
-                      <p className="mt-2 font-medium">Budget: ${request.job.budget}</p>
-                    </div>
-
-                    {request.status === "pending_freelancer" && (
-                      <div className="flex gap-4">
-                        <Button 
-                          onClick={() => updateRequestMutation.mutate({
-                            proposalId: request.id,
-                            status: "approved"
-                          })}
-                          disabled={updateRequestMutation.isPending}
-                        >
-                          Accept
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={() => updateRequestMutation.mutate({
-                            proposalId: request.id,
-                            status: "rejected"
-                          })}
-                          disabled={updateRequestMutation.isPending}
-                        >
-                          Decline
-                        </Button>
+            jobRequests
+              .filter(request => request.status !== "rejected")
+              .map((request) => (
+                <Card key={request.id}>
+                  <CardHeader>
+                    <CardTitle>{request.job.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">From {request.business.displayName}</p>
+                        <p className="mt-2">{request.job.description}</p>
+                        <p className="mt-2 font-medium">Budget: ${request.job.budget}</p>
                       </div>
-                    )}
 
-                    {request.status !== "pending_freelancer" && (
-                      <Badge>
-                        {request.status === "approved" ? "Accepted" : 
-                         request.status === "rejected" ? "Declined" : 
-                         request.status}
-                      </Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                      {request.status === "pending_freelancer" && (
+                        <div className="flex gap-4">
+                          <Button 
+                            onClick={() => updateRequestMutation.mutate({
+                              proposalId: request.id,
+                              status: "approved"
+                            })}
+                            disabled={updateRequestMutation.isPending}
+                          >
+                            Accept
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => updateRequestMutation.mutate({
+                              proposalId: request.id,
+                              status: "rejected"
+                            })}
+                            disabled={updateRequestMutation.isPending}
+                            className="text-red-600 hover:text-red-600"
+                          >
+                            Decline
+                          </Button>
+                        </div>
+                      )}
+
+                      {request.status !== "pending_freelancer" && (
+                        <Badge className={
+                          request.status === "approved" ? "bg-green-100 text-green-800" :
+                          request.status === "rejected" ? "bg-red-100 text-red-800" :
+                          ""
+                        }>
+                          {request.status === "approved" ? "Accepted" : 
+                           request.status === "rejected" ? "Declined" : 
+                           request.status}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
           )}
         </div>
       )}
