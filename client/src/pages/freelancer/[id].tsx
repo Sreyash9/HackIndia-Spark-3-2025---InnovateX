@@ -6,32 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { insertJobSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 export default function FreelancerProfile() {
   const { id } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
 
-  const form = useForm({
-    resolver: zodResolver(insertJobSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      budget: 0,
-      skills: [],
-    },
-  });
-
-  const { data: freelancer, isLoading, error } = useQuery<User>({
+  const { data: freelancer, isLoading: isLoadingFreelancer, error: freelancerError } = useQuery<User>({
     queryKey: [`/api/freelancers/${id}`],
     enabled: !!id && !!user && user.role === "business",
     retry: 1,
@@ -44,10 +32,16 @@ export default function FreelancerProfile() {
     },
   });
 
+  const { data: activeJobs = [], isLoading: isLoadingJobs } = useQuery<Job[]>({
+    queryKey: ["/api/business/jobs/active"],
+    enabled: !!user && user.role === "business",
+  });
+
   const offerJobMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/jobs", {
-        ...data,
+    mutationFn: async () => {
+      if (!selectedJobId) throw new Error("Please select a job");
+      const res = await apiRequest("POST", "/api/job-requests", {
+        jobId: selectedJobId,
         freelancerId: parseInt(id!),
       });
       return res.json();
@@ -56,20 +50,20 @@ export default function FreelancerProfile() {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
       toast({
         title: "Success",
-        description: "Job offer sent successfully",
+        description: "Job request sent successfully",
       });
-      form.reset();
+      setSelectedJobId(null);
     },
     onError: (error: Error) => {
       toast({
-        title: "Error sending job offer",
+        title: "Error sending job request",
         description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  if (error) {
+  if (freelancerError) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <div className="text-center">
@@ -80,7 +74,7 @@ export default function FreelancerProfile() {
     );
   }
 
-  if (isLoading || !freelancer) {
+  if (isLoadingFreelancer || !freelancer) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -152,65 +146,43 @@ export default function FreelancerProfile() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Create Job Offer</DialogTitle>
+                    <DialogTitle>Select a Job to Offer</DialogTitle>
                   </DialogHeader>
-                  <Form {...form}>
-                    <form
-                      onSubmit={form.handleSubmit((data) => offerJobMutation.mutate(data))}
-                      className="space-y-4"
-                    >
-                      <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Job Title</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                              <Textarea {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="budget"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Budget (USD)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={offerJobMutation.isPending}
+                  <div className="py-4">
+                    {isLoadingJobs ? (
+                      <div className="flex justify-center py-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      </div>
+                    ) : activeJobs.length === 0 ? (
+                      <p className="text-center text-muted-foreground">No active jobs available</p>
+                    ) : (
+                      <RadioGroup
+                        value={selectedJobId?.toString()}
+                        onValueChange={(value) => setSelectedJobId(parseInt(value))}
+                        className="space-y-2"
                       >
-                        {offerJobMutation.isPending ? "Creating..." : "Create Job Offer"}
-                      </Button>
-                    </form>
-                  </Form>
+                        {activeJobs.map((job) => (
+                          <div key={job.id} className="flex items-center space-x-2">
+                            <RadioGroupItem value={job.id.toString()} id={`job-${job.id}`} />
+                            <Label htmlFor={`job-${job.id}`} className="w-full">
+                              <div className="border rounded-md p-3 hover:bg-accent cursor-pointer">
+                                <h4 className="font-medium">{job.title}</h4>
+                                <p className="text-sm text-muted-foreground">{job.description}</p>
+                                <p className="text-sm font-medium mt-1">Budget: ${job.budget}</p>
+                              </div>
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    )}
+                  </div>
+                  <Button
+                    onClick={() => offerJobMutation.mutate()}
+                    disabled={!selectedJobId || offerJobMutation.isPending}
+                    className="w-full"
+                  >
+                    {offerJobMutation.isPending ? "Sending..." : "Send Job Request"}
+                  </Button>
                 </DialogContent>
               </Dialog>
             )}

@@ -59,6 +59,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(job);
   });
 
+  // Add new route to get active jobs for a business
+  app.get("/api/business/jobs/active", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "business") {
+      return res.status(403).json({ message: "Only businesses can view their jobs" });
+    }
+
+    try {
+      const jobs = await storage.getJobs();
+      // Filter jobs that belong to the business and are in an active state
+      const activeJobs = jobs.filter(job => 
+        job.businessId === req.user.id && 
+        job.status === "open"
+      );
+      res.json(activeJobs);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching active jobs" });
+    }
+  });
+
+
   // Proposals
   app.post("/api/proposals", async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "freelancer") {
@@ -132,6 +152,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(proposal);
     } catch (error) {
       res.status(500).json({ message: "Error updating proposal" });
+    }
+  });
+
+  // Add route to create job request
+  app.post("/api/job-requests", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "business") {
+      return res.status(403).json({ message: "Only businesses can send job requests" });
+    }
+
+    try {
+      const { jobId, freelancerId } = req.body;
+
+      // Verify the job belongs to the business
+      const job = await storage.getJob(jobId);
+      if (!job || job.businessId !== req.user.id) {
+        return res.status(403).json({ message: "Invalid job" });
+      }
+
+      // Create a proposal with the freelancer as the target
+      const proposal = await storage.createProposal({
+        jobId,
+        coverLetter: "Job offer from business",
+        proposedRate: job.budget,
+        freelancerId,
+        status: "pending_freelancer",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      res.status(201).json(proposal);
+    } catch (error) {
+      res.status(500).json({ message: "Error creating job request" });
     }
   });
 
