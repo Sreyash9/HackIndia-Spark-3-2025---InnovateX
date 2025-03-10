@@ -92,12 +92,10 @@ export default function JobRequests() {
           ) : (
             jobRequests.map((request: JobRequest) => (
               <Card key={request.id}>
-                <CardHeader>
-                  <CardTitle>{request.job.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   <div className="space-y-4">
                     <div>
+                      <h3 className="text-lg font-semibold">{request.job.title}</h3>
                       <p className="text-sm text-muted-foreground">From {request.business.displayName}</p>
                       <p className="mt-2">{request.job.description}</p>
                       <p className="mt-2 font-medium">Budget: ${request.job.budget}</p>
