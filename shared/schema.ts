@@ -63,7 +63,16 @@ export const insertUserSchema = createInsertSchema(users).pick({
   bio: z.string().nullable(),
   skills: z.array(z.string()).optional().default([]),
   hourlyRate: z.number().nullable(),
-  company: z.string().nullable(),
+  company: z.string().nullable().refine((val, ctx) => {
+    if (ctx.path.length > 0 && ctx.parent.role === "business" && !val) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Company name is required for business accounts",
+      });
+      return false;
+    }
+    return true;
+  }),
   portfolioTitle: z.string().nullable(),
   portfolioSummary: z.string().nullable(),
   portfolioProjects: z.array(z.object({

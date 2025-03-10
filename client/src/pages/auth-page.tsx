@@ -125,10 +125,10 @@ export default function AuthPage() {
                             <FormLabel>Password</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Input 
-                                  type={showLoginPassword ? "text" : "password"} 
-                                  {...field} 
-                                  autoComplete="current-password" 
+                                <Input
+                                  type={showLoginPassword ? "text" : "password"}
+                                  {...field}
+                                  autoComplete="current-password"
                                 />
                                 <Button
                                   type="button"
@@ -172,7 +172,19 @@ export default function AuthPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>I am a</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                // Clear role-specific fields when switching roles
+                                if (value === "freelancer") {
+                                  registerForm.setValue("company", null);
+                                } else {
+                                  registerForm.setValue("hourlyRate", null);
+                                  registerForm.setValue("skills", []);
+                                }
+                              }}
+                              defaultValue={field.value}
+                            >
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select your role" />
@@ -208,10 +220,10 @@ export default function AuthPage() {
                             <FormLabel>Password</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Input 
-                                  type={showRegisterPassword ? "text" : "password"} 
-                                  {...field} 
-                                  autoComplete="new-password" 
+                                <Input
+                                  type={showRegisterPassword ? "text" : "password"}
+                                  {...field}
+                                  autoComplete="new-password"
                                 />
                                 <Button
                                   type="button"
@@ -245,6 +257,21 @@ export default function AuthPage() {
                           </FormItem>
                         )}
                       />
+                      {registerForm.watch("role") === "business" && (
+                        <FormField
+                          control={registerForm.control}
+                          name="company"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Company Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} onChange={(e) => field.onChange(e.target.value || null)} value={field.value ?? ''} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                       <FormField
                         control={registerForm.control}
                         name="bio"
@@ -313,21 +340,6 @@ export default function AuthPage() {
                                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
                                   value={field.value ?? ''}
                                 />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                      {registerForm.watch("role") === "business" && (
-                        <FormField
-                          control={registerForm.control}
-                          name="company"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Company Name</FormLabel>
-                              <FormControl>
-                                <Input {...field} onChange={(e) => field.onChange(e.target.value || null)} value={field.value ?? ''} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
