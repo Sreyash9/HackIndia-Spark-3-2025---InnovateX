@@ -53,6 +53,26 @@ export default function JobRequests() {
     },
   });
 
+  const deleteRequestMutation = useMutation({
+    mutationFn: async (proposalId: number) => {
+      await apiRequest("DELETE", `/api/proposals/${proposalId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/freelancer/job-requests"] });
+      toast({
+        title: "Success",
+        description: "Job request rejected and removed",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error rejecting request",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   if (!user || user.role !== "freelancer") {
     return <div>Access denied. Only freelancers can view this page.</div>;
   }
@@ -95,14 +115,11 @@ export default function JobRequests() {
                           Accept
                         </Button>
                         <Button 
-                          variant="outline"
-                          onClick={() => updateRequestMutation.mutate({
-                            proposalId: request.id,
-                            status: "rejected"
-                          })}
-                          disabled={updateRequestMutation.isPending}
+                          variant="destructive"
+                          onClick={() => deleteRequestMutation.mutate(request.id)}
+                          disabled={deleteRequestMutation.isPending}
                         >
-                          Decline
+                          Reject
                         </Button>
                       </div>
                     )}

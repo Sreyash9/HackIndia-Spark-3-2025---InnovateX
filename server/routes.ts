@@ -245,6 +245,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add this route along with other proposal routes
+  app.delete("/api/proposals/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const proposalId = parseInt(req.params.id);
+
+    try {
+      // Get the proposal first to check permissions
+      const proposals = await storage.getProposalsByFreelancer(req.user.id);
+      const userProposal = proposals.find(p => p.id === proposalId);
+
+      if (!userProposal) {
+        return res.status(403).json({ message: "Proposal not found or access denied" });
+      }
+
+      await storage.deleteProposal(proposalId);
+      res.sendStatus(200);
+    } catch (error) {
+      console.error("Error deleting proposal:", error);
+      res.status(500).json({ message: "Error deleting proposal" });
+    }
+  });
+
   // Add this route before the Razorpay payment routes
   app.get("/api/freelancers/:id", async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "business") {
