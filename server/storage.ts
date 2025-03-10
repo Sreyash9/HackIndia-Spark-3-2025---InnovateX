@@ -15,14 +15,11 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User>;
-  getAllUsers(): Promise<User[]>; // New admin method
 
   // Job methods
   createJob(job: Omit<Job, "id" | "status" | "createdAt">, businessId: number): Promise<Job>;
   getJobs(): Promise<Job[]>;
   getJob(id: number): Promise<Job | undefined>;
-  getAllJobs(): Promise<Job[]>; // New admin method
-  updateJob(id: number, job: Partial<Job>): Promise<Job>; // New admin method
 
   // Proposal methods
   createProposal(proposal: Omit<Proposal, "id" | "status">, freelancerId: number): Promise<Proposal>;
@@ -119,23 +116,6 @@ export class DatabaseStorage implements IStorage {
 
   async getProposalsByFreelancer(freelancerId: number): Promise<Proposal[]> {
     return await db.select().from(proposals).where(eq(proposals.freelancerId, freelancerId));
-  }
-
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users);
-  }
-
-  async getAllJobs(): Promise<Job[]> {
-    return await db.select().from(jobs);
-  }
-
-  async updateJob(id: number, updateData: Partial<Job>): Promise<Job> {
-    const [job] = await db
-      .update(jobs)
-      .set(updateData)
-      .where(eq(jobs.id, id))
-      .returning();
-    return job;
   }
 }
 

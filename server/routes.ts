@@ -6,51 +6,17 @@ import { insertJobSchema, insertProposalSchema, insertUserSchema } from "@shared
 import { z } from "zod";
 import Razorpay from "razorpay";
 
-// Admin middleware
-const isAdmin = (req: any, res: any, next: any) => {
-  if (!req.isAuthenticated() || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Admin access required" });
-  }
-  next();
-};
+if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+  throw new Error('Missing required Razorpay credentials: RAZORPAY_KEY_ID and/or RAZORPAY_KEY_SECRET');
+}
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
-
-  // Admin routes
-  app.get("/api/admin/users", isAdmin, async (_req, res) => {
-    const users = await storage.getAllUsers();
-    res.json(users);
-  });
-
-  app.get("/api/admin/jobs", isAdmin, async (_req, res) => {
-    const jobs = await storage.getAllJobs();
-    res.json(jobs);
-  });
-
-  app.patch("/api/admin/users/:id/status", isAdmin, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const { isActive } = req.body;
-
-      const user = await storage.updateUser(userId, { isActive });
-      res.json(user);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to update user status" });
-    }
-  });
-
-  app.patch("/api/admin/jobs/:id", isAdmin, async (req, res) => {
-    try {
-      const jobId = parseInt(req.params.id);
-      const { status } = req.body;
-
-      const job = await storage.updateJob(jobId, { status });
-      res.json(job);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to update job status" });
-    }
-  });
 
   // User routes
   app.patch("/api/users/:id", async (req, res) => {

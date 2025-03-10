@@ -23,15 +23,10 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  try {
-    const [hashedPassword, salt] = stored.split(".");
-    const hashedBuf = Buffer.from(hashedPassword, "hex");
-    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-    return timingSafeEqual(hashedBuf, suppliedBuf);
-  } catch (error) {
-    console.error("Password comparison error:", error);
-    return false;
-  }
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
 export function setupAuth(app: Express) {
@@ -51,28 +46,12 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        console.log("Login attempt for user:", username);
         const user = await storage.getUserByUsername(username);
-        console.log("User found:", user ? "yes" : "no");
-
-        if (!user) {
+        if (!user || !(await comparePasswords(password, user.password))) {
           return done(null, false, { message: "Invalid username or password" });
         }
-
-        const isPasswordValid = await comparePasswords(password, user.password);
-        console.log("Password valid:", isPasswordValid);
-
-        if (!isPasswordValid) {
-          return done(null, false, { message: "Invalid username or password" });
-        }
-
-        if (!user.isActive) {
-          return done(null, false, { message: "Account is deactivated" });
-        }
-
         return done(null, user);
       } catch (error) {
-        console.error("Authentication error:", error);
         return done(error);
       }
     }),

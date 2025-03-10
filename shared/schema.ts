@@ -6,7 +6,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role", { enum: ["freelancer", "business", "admin"] }).notNull(),
+  role: text("role", { enum: ["freelancer", "business"] }).notNull(),
   displayName: text("display_name").notNull(),
   bio: text("bio"),
   skills: text("skills").array(),
@@ -18,8 +18,6 @@ export const users = pgTable("users", {
   education: json("education").array(),
   workExperience: json("work_experience").array(),
   certifications: json("certifications").array(),
-  isActive: boolean("is_active").notNull().default(true),
-  lastLogin: timestamp("last_login"),
 });
 
 export const jobs = pgTable("jobs", {
@@ -57,12 +55,10 @@ export const insertUserSchema = createInsertSchema(users).pick({
   education: true,
   workExperience: true,
   certifications: true,
-  isActive: true,
-  lastLogin: true,
 }).extend({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["freelancer", "business", "admin"]),
+  role: z.enum(["freelancer", "business"]),
   displayName: z.string().min(2, "Display name must be at least 2 characters"),
   bio: z.string().nullable(),
   skills: z.array(z.string()).optional().default([]),
@@ -97,8 +93,6 @@ export const insertUserSchema = createInsertSchema(users).pick({
     date: z.string(),
     link: z.string().optional(),
   })).nullable(),
-  isActive: z.boolean().default(true),
-  lastLogin: z.date().optional(),
 });
 
 export const insertJobSchema = createInsertSchema(jobs).pick({
@@ -106,12 +100,10 @@ export const insertJobSchema = createInsertSchema(jobs).pick({
   description: true,
   budget: true,
   skills: true,
-  businessId: true,
 });
 
 export const insertProposalSchema = createInsertSchema(proposals).pick({
   jobId: true,
-  freelancerId: true,
   coverLetter: true,
   proposedRate: true,
 });

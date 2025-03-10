@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
 } from "./dropdown-menu";
 import { Avatar, AvatarFallback } from "./avatar";
-import { Settings, LayoutDashboard } from "lucide-react";
+import { Settings } from "lucide-react";
 
 export default function Navbar() {
   const { user, logoutMutation } = useAuth();
@@ -46,11 +46,6 @@ export default function Navbar() {
                   <Button variant="ghost">My Portfolio</Button>
                 </Link>
               )}
-              {user.role === "admin" && (
-                <Link href="/admin">
-                  <Button variant="ghost">Admin Dashboard</Button>
-                </Link>
-              )}
             </div>
           </div>
 
@@ -77,14 +72,6 @@ export default function Navbar() {
                 {user.role === "freelancer" && (
                   <DropdownMenuItem asChild>
                     <Link href="/portfolio">My Portfolio</Link>
-                  </DropdownMenuItem>
-                )}
-                {user.role === "admin" && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin" className="flex items-center">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      <span>Admin Dashboard</span>
-                    </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>

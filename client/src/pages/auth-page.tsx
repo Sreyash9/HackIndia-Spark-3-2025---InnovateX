@@ -13,10 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff } from "lucide-react";
 
 const registerFormSchema = insertUserSchema.extend({
-  role: z.enum(["freelancer", "business", "admin"]),
+  role: z.enum(["freelancer", "business"]),
 });
 
 type RegisterFormData = z.infer<typeof registerFormSchema>;
@@ -24,8 +23,6 @@ type RegisterFormData = z.infer<typeof registerFormSchema>;
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [skillInput, setSkillInput] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const { toast } = useToast();
 
   const loginForm = useForm({
@@ -125,26 +122,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <Input 
-                                  type={showPassword ? "text" : "password"} 
-                                  {...field} 
-                                  autoComplete="current-password" 
-                                />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="absolute right-0 top-0 h-full px-3"
-                                  onClick={() => setShowPassword(!showPassword)}
-                                >
-                                  {showPassword ? (
-                                    <EyeOff className="h-4 w-4" />
-                                  ) : (
-                                    <Eye className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </div>
+                              <Input type="password" {...field} autoComplete="current-password" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -182,7 +160,6 @@ export default function AuthPage() {
                               <SelectContent>
                                 <SelectItem value="freelancer">Freelancer</SelectItem>
                                 <SelectItem value="business">Business</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -209,26 +186,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <Input 
-                                  type={showRegisterPassword ? "text" : "password"} 
-                                  {...field} 
-                                  autoComplete="new-password" 
-                                />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="absolute right-0 top-0 h-full px-3"
-                                  onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                                >
-                                  {showRegisterPassword ? (
-                                    <EyeOff className="h-4 w-4" />
-                                  ) : (
-                                    <Eye className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </div>
+                              <Input type="password" {...field} autoComplete="new-password" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
