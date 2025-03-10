@@ -14,6 +14,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User>;
 
   // Job methods
   createJob(job: Omit<Job, "id" | "status" | "createdAt">, businessId: number): Promise<Job>;
@@ -52,10 +53,25 @@ export class DatabaseStorage implements IStorage {
       .values({
         ...insertUser,
         bio: insertUser.bio ?? null,
-        skills: insertUser.skills ?? null,
+        skills: insertUser.skills ?? [],
         hourlyRate: insertUser.hourlyRate ?? null,
         company: insertUser.company ?? null,
+        portfolioTitle: insertUser.portfolioTitle ?? null,
+        portfolioSummary: insertUser.portfolioSummary ?? null,
+        portfolioProjects: insertUser.portfolioProjects ?? null,
+        education: insertUser.education ?? null,
+        workExperience: insertUser.workExperience ?? null,
+        certifications: insertUser.certifications ?? null,
       })
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: number, updateData: Partial<InsertUser>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, id))
       .returning();
     return user;
   }

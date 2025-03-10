@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertJobSchema, insertProposalSchema } from "@shared/schema";
+import { insertJobSchema, insertProposalSchema, insertUserSchema } from "@shared/schema";
+import { z } from "zod";
 import Razorpay from "razorpay";
 
 if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
@@ -16,6 +17,25 @@ const razorpay = new Razorpay({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  // User routes
+  app.patch("/api/users/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (req.user.id !== parseInt(req.params.id)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    try {
+      const updateData = insertUserSchema.partial().parse(req.body);
+      const updatedUser = await storage.updateUser(req.user.id, updateData);
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid user data" });
+    }
+  });
 
   // Jobs
   app.post("/api/jobs", async (req, res) => {

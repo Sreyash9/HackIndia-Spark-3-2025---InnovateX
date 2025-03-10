@@ -10,6 +10,7 @@ import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
 import PostJob from "@/pages/post-job";
 import Jobs from "@/pages/jobs";
+import Portfolio from "@/pages/portfolio";
 import Navbar from "@/components/ui/navbar";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/" component={() => <ProtectedRoute path="/" component={HomePage} />} />
       <Route path="/post-job" component={() => <ProtectedRoute path="/post-job" component={PostJob} />} />
       <Route path="/jobs" component={() => <ProtectedRoute path="/jobs" component={Jobs} />} />
+      <Route path="/portfolio" component={() => <ProtectedRoute path="/portfolio" component={Portfolio} />} />
       <Route component={NotFound} />
     </Switch>
   );

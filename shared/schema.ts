@@ -12,6 +12,12 @@ export const users = pgTable("users", {
   skills: text("skills").array(),
   hourlyRate: integer("hourly_rate"),
   company: text("company"),
+  portfolioTitle: text("portfolio_title"),
+  portfolioSummary: text("portfolio_summary"),
+  portfolioProjects: json("portfolio_projects").array(),
+  education: json("education").array(),
+  workExperience: json("work_experience").array(),
+  certifications: json("certifications").array(),
 });
 
 export const jobs = pgTable("jobs", {
@@ -43,6 +49,12 @@ export const insertUserSchema = createInsertSchema(users).pick({
   skills: true,
   hourlyRate: true,
   company: true,
+  portfolioTitle: true,
+  portfolioSummary: true,
+  portfolioProjects: true,
+  education: true,
+  workExperience: true,
+  certifications: true,
 }).extend({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -52,6 +64,35 @@ export const insertUserSchema = createInsertSchema(users).pick({
   skills: z.array(z.string()).optional().default([]),
   hourlyRate: z.number().nullable(),
   company: z.string().nullable(),
+  portfolioTitle: z.string().nullable(),
+  portfolioSummary: z.string().nullable(),
+  portfolioProjects: z.array(z.object({
+    title: z.string(),
+    description: z.string(),
+    link: z.string().optional(),
+    technologies: z.array(z.string()),
+    image: z.string().optional(),
+  })).nullable(),
+  education: z.array(z.object({
+    institution: z.string(),
+    degree: z.string(),
+    fieldOfStudy: z.string(),
+    startDate: z.string(),
+    endDate: z.string().optional(),
+  })).nullable(),
+  workExperience: z.array(z.object({
+    company: z.string(),
+    position: z.string(),
+    startDate: z.string(),
+    endDate: z.string().optional(),
+    description: z.string(),
+  })).nullable(),
+  certifications: z.array(z.object({
+    name: z.string(),
+    issuer: z.string(),
+    date: z.string(),
+    link: z.string().optional(),
+  })).nullable(),
 });
 
 export const insertJobSchema = createInsertSchema(jobs).pick({

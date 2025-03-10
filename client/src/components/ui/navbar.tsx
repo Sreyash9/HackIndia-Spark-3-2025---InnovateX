@@ -39,6 +39,11 @@ export default function Navbar() {
                   <Button variant="ghost">Post a Job</Button>
                 </Link>
               )}
+              {user.role === "freelancer" && (
+                <Link href="/portfolio">
+                  <Button variant="ghost">My Portfolio</Button>
+                </Link>
+              )}
             </div>
           </div>
 
@@ -52,6 +57,11 @@ export default function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {user.role === "freelancer" && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/portfolio">My Portfolio</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={() => logoutMutation.mutate()}
                   className="cursor-pointer"
