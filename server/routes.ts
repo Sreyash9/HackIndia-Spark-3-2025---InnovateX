@@ -6,6 +6,7 @@ import { insertJobSchema, insertProposalSchema, insertUserSchema } from "@shared
 import { z } from "zod";
 import Razorpay from "razorpay";
 import { getTopMatches } from "./services/ai-matching";
+import { generateCareerAdvice } from "./services/career-guide"; // Add this import
 
 if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
   throw new Error('Missing required Razorpay credentials: RAZORPAY_KEY_ID and/or RAZORPAY_KEY_SECRET');
