@@ -13,6 +13,7 @@ import { insertUserSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, X } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function Portfolio() {
   const { user } = useAuth();
@@ -62,15 +63,30 @@ export default function Portfolio() {
   if (!isEditing) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">{user.portfolioTitle || user.displayName}</h1>
-            <p className="text-gray-600 mt-2">{user.portfolioSummary || user.bio}</p>
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-20 w-20">
+              <AvatarFallback className="text-2xl">{user.displayName.split(" ").map((n) => n[0]).join("").toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h2 className="text-2xl font-bold">{user.displayName}</h2>
+              <p className="text-gray-600">{user.username}</p>
+              {user.hourlyRate && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Hourly Rate: ${user.hourlyRate}/hr
+                </p>
+              )}
+            </div>
           </div>
           <Button onClick={() => setIsEditing(true)}>Edit Portfolio</Button>
         </div>
 
         <div className="space-y-8">
+          <div>
+            <h1 className="text-3xl font-bold">{user.portfolioTitle || user.displayName}</h1>
+            <p className="text-gray-600 mt-2">{user.portfolioSummary || user.bio}</p>
+          </div>
+
           {/* Skills Section */}
           <Card>
             <CardHeader>
