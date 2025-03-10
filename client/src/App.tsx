@@ -13,6 +13,7 @@ import Jobs from "@/pages/jobs";
 import Portfolio from "@/pages/portfolio";
 import Settings from "@/pages/settings";
 import Navbar from "@/components/ui/navbar";
+import Hire from "@/pages/hire";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/jobs" component={() => <ProtectedRoute path="/jobs" component={Jobs} />} />
       <Route path="/portfolio" component={() => <ProtectedRoute path="/portfolio" component={Portfolio} />} />
       <Route path="/settings" component={() => <ProtectedRoute path="/settings" component={Settings} />} />
+      <Route path="/hire" component={() => <ProtectedRoute path="/hire" component={Hire} />} />
       <Route component={NotFound} />
     </Switch>
   );
