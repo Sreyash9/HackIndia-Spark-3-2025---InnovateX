@@ -12,7 +12,6 @@ import PostJob from "@/pages/post-job";
 import Jobs from "@/pages/jobs";
 import Portfolio from "@/pages/portfolio";
 import Settings from "@/pages/settings";
-import AdminDashboard from "@/pages/admin-dashboard";
 import Navbar from "@/components/ui/navbar";
 
 function Router() {
@@ -24,7 +23,6 @@ function Router() {
       <Route path="/jobs" component={() => <ProtectedRoute path="/jobs" component={Jobs} />} />
       <Route path="/portfolio" component={() => <ProtectedRoute path="/portfolio" component={Portfolio} />} />
       <Route path="/settings" component={() => <ProtectedRoute path="/settings" component={Settings} />} />
-      <Route path="/admin" component={() => <ProtectedRoute path="/admin" component={AdminDashboard} />} />
       <Route component={NotFound} />
     </Switch>
   );
