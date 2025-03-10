@@ -43,6 +43,15 @@ export const insertUserSchema = createInsertSchema(users).pick({
   skills: true,
   hourlyRate: true,
   company: true,
+}).extend({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["freelancer", "business"]),
+  displayName: z.string().min(2, "Display name must be at least 2 characters"),
+  bio: z.string().nullable(),
+  skills: z.array(z.string()).optional().default([]),
+  hourlyRate: z.number().nullable(),
+  company: z.string().nullable(),
 });
 
 export const insertJobSchema = createInsertSchema(jobs).pick({

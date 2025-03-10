@@ -7,6 +7,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { insertUserSchema, User as SelectUser } from "@shared/schema";
+import { ZodError } from "zod";
 
 declare global {
   namespace Express {
@@ -51,7 +52,7 @@ export function setupAuth(app: Express) {
       } else {
         return done(null, user);
       }
-    })
+    }),
   );
 
   // Google Strategy
@@ -98,7 +99,13 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
+      const userData = insertUserSchema.parse({
+        ...req.body,
+        skills: req.body.skills || [],
+        bio: req.body.bio || null,
+        hourlyRate: req.body.hourlyRate || null,
+        company: req.body.company || null,
+      });
 
       const existingUser = await storage.getUserByUsername(userData.username);
       if (existingUser) {
@@ -115,6 +122,13 @@ export function setupAuth(app: Express) {
         res.status(201).json(user);
       });
     } catch (error) {
+      if (error instanceof ZodError) {
+        const errors = error.errors.map(err => ({
+          field: err.path.join('.'),
+          message: err.message,
+        }));
+        return res.status(400).json({ message: "Validation errors", errors });
+      }
       res.status(400).json({ message: "Invalid user data" });
     }
   });
