@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertJobSchema, insertProposalSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 import Razorpay from "razorpay";
+import { getTopMatches } from "./services/ai-matching";
 
 if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
   throw new Error('Missing required Razorpay credentials: RAZORPAY_KEY_ID and/or RAZORPAY_KEY_SECRET');
@@ -242,6 +243,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating proposal:", error);
       res.status(500).json({ message: "Error updating proposal" });
+    }
+  });
+
+  // Add this route to the existing routes in registerRoutes function
+  app.get("/api/jobs/:jobId/recommended-freelancers", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "business") {
+      return res.status(403).json({ message: "Only businesses can view recommended freelancers" });
+    }
+
+    try {
+      const jobId = parseInt(req.params.jobId);
+      const job = await storage.getJob(jobId);
+
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      if (job.businessId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const freelancers = await storage.getFreelancers();
+      const recommendedFreelancers = await getTopMatches(jobId, freelancers, job);
+
+      res.json(recommendedFreelancers);
+    } catch (error) {
+      console.error("Error getting recommended freelancers:", error);
+      res.status(500).json({ message: "Error getting recommended freelancers" });
     }
   });
 
