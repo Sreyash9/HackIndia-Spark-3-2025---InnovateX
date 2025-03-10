@@ -1,7 +1,6 @@
 import { pgTable, text, serial, integer, boolean, json, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import type { Context } from "zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -41,69 +40,60 @@ export const proposals = pgTable("proposals", {
   status: text("status", { enum: ["pending", "accepted", "rejected"] }).notNull().default("pending"),
 });
 
-export const insertUserSchema = createInsertSchema(users)
-  .pick({
-    username: true,
-    password: true,
-    role: true,
-    displayName: true,
-    bio: true,
-    skills: true,
-    hourlyRate: true,
-    company: true,
-    portfolioTitle: true,
-    portfolioSummary: true,
-    portfolioProjects: true,
-    education: true,
-    workExperience: true,
-    certifications: true,
-  })
-  .extend({
-    username: z.string().min(3, "Username must be at least 3 characters"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    role: z.enum(["freelancer", "business"]),
-    displayName: z.string().min(2, "Display name must be at least 2 characters"),
-    bio: z.string().nullable(),
-    skills: z.array(z.string()).optional().default([]),
-    hourlyRate: z.number().nullable(),
-    company: z.string().nullable().superRefine((val, ctx) => {
-      if (ctx.path.length > 0 && (ctx.parent as any).role === "business" && !val) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Company name is required for business accounts",
-        });
-      }
-    }),
-    portfolioTitle: z.string().nullable(),
-    portfolioSummary: z.string().nullable(),
-    portfolioProjects: z.array(z.object({
-      title: z.string(),
-      description: z.string(),
-      link: z.string().optional(),
-      technologies: z.array(z.string()),
-      image: z.string().optional(),
-    })).nullable(),
-    education: z.array(z.object({
-      institution: z.string(),
-      degree: z.string(),
-      fieldOfStudy: z.string(),
-      startDate: z.string(),
-      endDate: z.string().optional(),
-    })).nullable(),
-    workExperience: z.array(z.object({
-      company: z.string(),
-      position: z.string(),
-      startDate: z.string(),
-      endDate: z.string().optional(),
-      description: z.string(),
-    })).nullable(),
-    certifications: z.array(z.object({
-      name: z.string(),
-      issuer: z.string(),
-      date: z.string(),
-      link: z.string().optional(),
-    })).nullable(),
-  });
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+  role: true,
+  displayName: true,
+  bio: true,
+  skills: true,
+  hourlyRate: true,
+  company: true,
+  portfolioTitle: true,
+  portfolioSummary: true,
+  portfolioProjects: true,
+  education: true,
+  workExperience: true,
+  certifications: true,
+}).extend({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["freelancer", "business"]),
+  displayName: z.string().min(2, "Display name must be at least 2 characters"),
+  bio: z.string().nullable(),
+  skills: z.array(z.string()).optional().default([]),
+  hourlyRate: z.number().nullable(),
+  company: z.string().nullable(),
+  portfolioTitle: z.string().nullable(),
+  portfolioSummary: z.string().nullable(),
+  portfolioProjects: z.array(z.object({
+    title: z.string(),
+    description: z.string(),
+    link: z.string().optional(),
+    technologies: z.array(z.string()),
+    image: z.string().optional(),
+  })).nullable(),
+  education: z.array(z.object({
+    institution: z.string(),
+    degree: z.string(),
+    fieldOfStudy: z.string(),
+    startDate: z.string(),
+    endDate: z.string().optional(),
+  })).nullable(),
+  workExperience: z.array(z.object({
+    company: z.string(),
+    position: z.string(),
+    startDate: z.string(),
+    endDate: z.string().optional(),
+    description: z.string(),
+  })).nullable(),
+  certifications: z.array(z.object({
+    name: z.string(),
+    issuer: z.string(),
+    date: z.string(),
+    link: z.string().optional(),
+  })).nullable(),
+});
 
 export const insertJobSchema = createInsertSchema(jobs).pick({
   title: true,

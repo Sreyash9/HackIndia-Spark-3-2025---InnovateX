@@ -18,19 +18,11 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      <Route path="/" component={HomePage} />
-      <Route path="/post-job">
-        <ProtectedRoute path="/post-job" component={PostJob} />
-      </Route>
-      <Route path="/jobs">
-        <ProtectedRoute path="/jobs" component={Jobs} />
-      </Route>
-      <Route path="/portfolio">
-        <ProtectedRoute path="/portfolio" component={Portfolio} />
-      </Route>
-      <Route path="/settings">
-        <ProtectedRoute path="/settings" component={Settings} />
-      </Route>
+      <Route path="/" component={() => <ProtectedRoute path="/" component={HomePage} />} />
+      <Route path="/post-job" component={() => <ProtectedRoute path="/post-job" component={PostJob} />} />
+      <Route path="/jobs" component={() => <ProtectedRoute path="/jobs" component={Jobs} />} />
+      <Route path="/portfolio" component={() => <ProtectedRoute path="/portfolio" component={Portfolio} />} />
+      <Route path="/settings" component={() => <ProtectedRoute path="/settings" component={Settings} />} />
       <Route component={NotFound} />
     </Switch>
   );
