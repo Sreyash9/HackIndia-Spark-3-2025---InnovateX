@@ -204,7 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update proposal status (for both freelancer and business)
+  // Update proposal status (for freelancer accepting/rejecting job requests)
   app.patch("/api/proposals/:id", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -213,60 +213,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const proposalId = parseInt(req.params.id);
     const { status } = req.body;
 
+    if (!["applied", "under_review", "approved", "rejected", "waitlist", "pending_freelancer"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
     try {
-      // Get the proposal first to check permissions
-      const proposal = await storage.getProposalsByFreelancer(req.user.id);
-      const userProposal = proposal.find(p => p.id === proposalId);
-
-      if (!userProposal) {
-        return res.status(403).json({ message: "Proposal not found or access denied" });
-      }
-
-      // Validate status based on user role
-      if (req.user.role === "freelancer") {
-        if (!["approved", "rejected"].includes(status)) {
-          return res.status(400).json({ message: "Invalid status for freelancer" });
-        }
-      } else if (req.user.role === "business") {
-        if (!["applied", "under_review", "approved", "rejected", "waitlist"].includes(status)) {
-          return res.status(400).json({ message: "Invalid status for business" });
-        }
-      }
-
-      const updatedProposal = await storage.updateProposal(proposalId, { 
-        status,
-        updatedAt: new Date()
-      });
-
-      res.json(updatedProposal);
+      const proposal = await storage.updateProposal(proposalId, { status });
+      res.json(proposal);
     } catch (error) {
-      console.error("Error updating proposal:", error);
       res.status(500).json({ message: "Error updating proposal" });
     }
   });
 
-  // Add this route along with other proposal routes
-  app.delete("/api/proposals/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
+  app.patch("/api/proposals/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "business") {
+      return res.status(403).json({ message: "Only businesses can update proposals" });
     }
 
     const proposalId = parseInt(req.params.id);
+    const { status } = req.body;
+
+    if (!["applied", "under_review", "approved", "rejected", "waitlist"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
 
     try {
-      // Get the proposal first to check permissions
-      const proposals = await storage.getProposalsByFreelancer(req.user.id);
-      const userProposal = proposals.find(p => p.id === proposalId);
-
-      if (!userProposal) {
-        return res.status(403).json({ message: "Proposal not found or access denied" });
-      }
-
-      await storage.deleteProposal(proposalId);
-      res.sendStatus(200);
+      const proposal = await storage.updateProposal(proposalId, { status });
+      res.json(proposal);
     } catch (error) {
-      console.error("Error deleting proposal:", error);
-      res.status(500).json({ message: "Error deleting proposal" });
+      res.status(500).json({ message: "Error updating proposal" });
     }
   });
 

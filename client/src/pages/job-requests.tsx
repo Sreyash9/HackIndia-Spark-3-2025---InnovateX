@@ -53,26 +53,6 @@ export default function JobRequests() {
     },
   });
 
-  const deleteRequestMutation = useMutation({
-    mutationFn: async (proposalId: number) => {
-      await apiRequest("DELETE", `/api/proposals/${proposalId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/freelancer/job-requests"] });
-      toast({
-        title: "Success",
-        description: "Job request rejected and removed",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error rejecting request",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   if (!user || user.role !== "freelancer") {
     return <div>Access denied. Only freelancers can view this page.</div>;
   }
@@ -92,10 +72,12 @@ export default function JobRequests() {
           ) : (
             jobRequests.map((request: JobRequest) => (
               <Card key={request.id}>
-                <CardContent className="pt-6">
+                <CardHeader>
+                  <CardTitle>{request.job.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-lg font-semibold">{request.job.title}</h3>
                       <p className="text-sm text-muted-foreground">From {request.business.displayName}</p>
                       <p className="mt-2">{request.job.description}</p>
                       <p className="mt-2 font-medium">Budget: ${request.job.budget}</p>
@@ -113,11 +95,14 @@ export default function JobRequests() {
                           Accept
                         </Button>
                         <Button 
-                          variant="destructive"
-                          onClick={() => deleteRequestMutation.mutate(request.id)}
-                          disabled={deleteRequestMutation.isPending}
+                          variant="outline"
+                          onClick={() => updateRequestMutation.mutate({
+                            proposalId: request.id,
+                            status: "rejected"
+                          })}
+                          disabled={updateRequestMutation.isPending}
                         >
-                          Reject
+                          Decline
                         </Button>
                       </div>
                     )}

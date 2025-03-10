@@ -27,7 +27,6 @@ export interface IStorage {
   getProposalsByJob(jobId: number): Promise<Proposal[]>;
   getProposalsByFreelancer(freelancerId: number): Promise<Proposal[]>;
   updateProposal(id: number, updates: Partial<Proposal>): Promise<Proposal>;
-  deleteProposal(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -137,10 +136,6 @@ export class DatabaseStorage implements IStorage {
       .where(eq(proposals.id, id))
       .returning();
     return proposal;
-  }
-
-  async deleteProposal(id: number): Promise<void> {
-    await db.delete(proposals).where(eq(proposals.id, id));
   }
 }
 
