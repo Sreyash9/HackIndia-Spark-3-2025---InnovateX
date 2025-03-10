@@ -237,6 +237,25 @@ export default function Portfolio() {
               />
               <FormField
                 control={form.control}
+                name="hourlyRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hourly Rate (USD)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        value={field.value || ''}
+                        onChange={e => field.onChange(e.target.valueAsNumber)}
+                        placeholder="Enter your hourly rate"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="portfolioSummary"
                 render={({ field }) => (
                   <FormItem>
