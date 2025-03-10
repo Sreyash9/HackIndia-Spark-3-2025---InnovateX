@@ -47,9 +47,14 @@ export default function Navbar() {
                 </>
               )}
               {user.role === "freelancer" && (
-                <Link href="/portfolio">
-                  <Button variant="ghost">My Portfolio</Button>
-                </Link>
+                <>
+                  <Link href="/portfolio">
+                    <Button variant="ghost">My Portfolio</Button>
+                  </Link>
+                  <Link href="/job-requests">
+                    <Button variant="ghost">Job Requests</Button>
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -75,9 +80,14 @@ export default function Navbar() {
                 </div>
                 <DropdownMenuSeparator />
                 {user.role === "freelancer" && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/portfolio">My Portfolio</Link>
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/portfolio">My Portfolio</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/job-requests">Job Requests</Link>
+                    </DropdownMenuItem>
+                  </>
                 )}
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="flex items-center">

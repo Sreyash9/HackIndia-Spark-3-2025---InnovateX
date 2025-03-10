@@ -68,8 +68,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const jobs = await storage.getJobs();
       // Filter jobs that belong to the business and are in an active state
-      const activeJobs = jobs.filter(job => 
-        job.businessId === req.user.id && 
+      const activeJobs = jobs.filter(job =>
+        job.businessId === req.user.id &&
         job.status === "open"
       );
       res.json(activeJobs);
@@ -135,23 +135,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/proposals/:id", async (req, res) => {
-    if (!req.isAuthenticated() || req.user.role !== "business") {
-      return res.status(403).json({ message: "Only businesses can update proposals" });
-    }
-
-    const proposalId = parseInt(req.params.id);
-    const { status } = req.body;
-
-    if (!["applied", "under_review", "approved", "rejected", "waitlist"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
+  // Add route to get freelancer's job requests
+  app.get("/api/freelancer/job-requests", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "freelancer") {
+      return res.status(403).json({ message: "Only freelancers can view their job requests" });
     }
 
     try {
-      const proposal = await storage.updateProposal(proposalId, { status });
-      res.json(proposal);
+      const proposals = await storage.getProposalsByFreelancer(req.user.id);
+
+      // Enrich the proposals with job and business details
+      const enrichedProposals = await Promise.all(
+        proposals.map(async (proposal) => {
+          const job = await storage.getJob(proposal.jobId);
+          const business = job ? await storage.getUser(job.businessId) : null;
+
+          return {
+            ...proposal,
+            job: {
+              title: job?.title,
+              description: job?.description,
+              budget: job?.budget,
+            },
+            business: business ? {
+              displayName: business.displayName,
+              username: business.username,
+            } : null,
+          };
+        })
+      );
+
+      res.json(enrichedProposals);
     } catch (error) {
-      res.status(500).json({ message: "Error updating proposal" });
+      res.status(500).json({ message: "Error fetching job requests" });
     }
   });
 
@@ -187,6 +203,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update proposal status (for freelancer accepting/rejecting job requests)
+  app.patch("/api/proposals/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const proposalId = parseInt(req.params.id);
+    const { status } = req.body;
+
+    if (!["applied", "under_review", "approved", "rejected", "waitlist", "pending_freelancer"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    try {
+      const proposal = await storage.updateProposal(proposalId, { status });
+      res.json(proposal);
+    } catch (error) {
+      res.status(500).json({ message: "Error updating proposal" });
+    }
+  });
+
+  app.patch("/api/proposals/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "business") {
+      return res.status(403).json({ message: "Only businesses can update proposals" });
+    }
+
+    const proposalId = parseInt(req.params.id);
+    const { status } = req.body;
+
+    if (!["applied", "under_review", "approved", "rejected", "waitlist"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    try {
+      const proposal = await storage.updateProposal(proposalId, { status });
+      res.json(proposal);
+    } catch (error) {
+      res.status(500).json({ message: "Error updating proposal" });
+    }
+  });
+
   // Add this route before the Razorpay payment routes
   app.get("/api/freelancers/:id", async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "business") {
@@ -210,7 +267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const freelancers = await storage.getFreelancers(); 
+      const freelancers = await storage.getFreelancers();
       res.json(freelancers);
     } catch (error) {
       res.status(500).json({ message: "Error fetching freelancers" });
@@ -222,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { amount } = req.body;
       const options = {
-        amount: Math.round(amount * 100), 
+        amount: Math.round(amount * 100),
         currency: "INR",
         receipt: "order_" + Date.now(),
       };
