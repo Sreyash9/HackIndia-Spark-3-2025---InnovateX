@@ -29,6 +29,7 @@ export default function Portfolio() {
       education: user?.education || [],
       workExperience: user?.workExperience || [],
       certifications: user?.certifications || [],
+      skills: user?.skills || [], // Added skills to defaultValues
     },
   });
 
@@ -230,6 +231,62 @@ export default function Portfolio() {
                         placeholder="Write a brief summary about yourself and your expertise..."
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Skills Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Skills</CardTitle>
+              <CardDescription>Add your technical skills and expertise</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                control={form.control}
+                name="skills"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Skills</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Type a skill and press Enter"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const value = e.currentTarget.value.trim();
+                            if (value) {
+                              const skills = field.value || [];
+                              field.onChange([...skills, value]);
+                              e.currentTarget.value = "";
+                            }
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {field.value?.map((skill: string, index: number) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="gap-1"
+                        >
+                          {skill}
+                          <X
+                            className="h-3 w-3 cursor-pointer"
+                            onClick={() => {
+                              const skills = field.value.filter(
+                                (_: string, i: number) => i !== index
+                              );
+                              field.onChange(skills);
+                            }}
+                          />
+                        </Badge>
+                      ))}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
