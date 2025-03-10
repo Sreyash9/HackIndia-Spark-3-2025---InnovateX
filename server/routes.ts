@@ -88,7 +88,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       for (const jobId of jobIds) {
         const jobProposals = await storage.getProposalsByJob(jobId);
-        proposals.push(...jobProposals);
+        // Get freelancer details for each proposal
+        const proposalsWithFreelancers = await Promise.all(
+          jobProposals.map(async (proposal) => {
+            const freelancer = await storage.getUser(proposal.freelancerId);
+            return {
+              ...proposal,
+              freelancer: {
+                displayName: freelancer?.displayName,
+                username: freelancer?.username,
+                // Add any other needed freelancer details
+              }
+            };
+          })
+        );
+        proposals.push(...proposalsWithFreelancers);
       }
 
       res.json(proposals);
@@ -105,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const proposalId = parseInt(req.params.id);
     const { status } = req.body;
 
-    if (!["applied", "under_review", "approved", "rejected"].includes(status)) {
+    if (!["applied", "under_review", "approved", "rejected", "waitlist"].includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
 

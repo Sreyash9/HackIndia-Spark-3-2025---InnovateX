@@ -92,11 +92,14 @@ export const proposals = pgTable("proposals", {
   coverLetter: text("cover_letter").notNull(),
   proposedRate: integer("proposed_rate").notNull(),
   status: text("status", { 
-    enum: ["applied", "under_review", "approved", "rejected"] 
+    enum: ["applied", "under_review", "approved", "rejected", "waitlist"] 
   }).notNull().default("applied"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
+
+// Update the enum type in the ProposalProgress component type
+export type ProposalStatus = "applied" | "under_review" | "approved" | "rejected" | "waitlist";
 
 export const insertJobSchema = createInsertSchema(jobs).pick({
   title: true,

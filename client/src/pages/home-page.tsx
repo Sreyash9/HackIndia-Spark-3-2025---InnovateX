@@ -87,15 +87,34 @@ export default function HomePage() {
                 <div key={proposal.id} className="p-4 border rounded-lg mb-4">
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold">Proposal #{proposal.id}</h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Proposed Rate: ${proposal.proposedRate}/hr
-                        </p>
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                          {proposal.freelancer?.displayName?.[0]?.toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">Proposal #{proposal.id}</h3>
+                          <p className="text-sm text-gray-600">
+                            by {proposal.freelancer?.displayName}
+                          </p>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Proposed Rate: ${proposal.proposedRate}/hr
+                          </p>
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         {proposal.status === "applied" && (
                           <>
+                            <Button
+                              variant="outline"
+                              onClick={() =>
+                                updateProposalMutation.mutate({
+                                  proposalId: proposal.id,
+                                  status: "waitlist"
+                                })
+                              }
+                            >
+                              Add to Waitlist
+                            </Button>
                             <Button
                               variant="outline"
                               onClick={() =>

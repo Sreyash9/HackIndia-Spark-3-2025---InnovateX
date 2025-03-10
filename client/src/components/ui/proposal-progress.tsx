@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type ProposalStatus = "applied" | "under_review" | "approved" | "rejected";
+type ProposalStatus = "applied" | "under_review" | "approved" | "rejected" | "waitlist";
 
 interface ProposalProgressProps {
   status: ProposalStatus;
@@ -16,12 +16,13 @@ export function ProposalProgress({ status, className }: ProposalProgressProps) {
 
   const currentStageIndex = stages.findIndex(stage => stage.key === status);
   const isRejected = status === "rejected";
+  const isWaitlisted = status === "waitlist";
 
   return (
     <div className={cn("w-full", className)}>
       <div className="flex items-center justify-between mb-2">
         {stages.map((stage, index) => {
-          const isActive = !isRejected && index <= currentStageIndex;
+          const isActive = !isRejected && !isWaitlisted && index <= currentStageIndex;
           const isCurrentStage = stage.key === status;
 
           return (
@@ -60,6 +61,11 @@ export function ProposalProgress({ status, className }: ProposalProgressProps) {
       {isRejected && (
         <div className="text-center mt-4">
           <span className="text-destructive font-medium">Proposal Rejected</span>
+        </div>
+      )}
+      {isWaitlisted && (
+        <div className="text-center mt-4">
+          <span className="text-yellow-600 font-medium">Waitlisted</span>
         </div>
       )}
     </div>
