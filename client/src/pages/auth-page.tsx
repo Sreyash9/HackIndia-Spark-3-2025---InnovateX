@@ -61,13 +61,29 @@ export default function AuthPage() {
       toast({
         title: "Registration successful!",
         description: "You have successfully registered.",
-        variant: "success",
       });
     } catch (error: any) {
       const message = error.response?.data?.message || error.message;
       toast({
         title: "Registration failed",
         description: message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const onLoginSubmit = async (data: any) => {
+    try {
+      await loginMutation.mutateAsync(data);
+      toast({
+        title: "Login successful!",
+        description: "Welcome back!",
+      });
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.message;
+      toast({
+        title: "Login failed",
+        description: "Invalid username or password",
         variant: "destructive",
       });
     }
@@ -101,7 +117,7 @@ export default function AuthPage() {
                 </CardHeader>
                 <CardContent>
                   <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
                         control={loginForm.control}
                         name="username"
