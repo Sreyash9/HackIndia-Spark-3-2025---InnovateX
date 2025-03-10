@@ -263,7 +263,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: response });
     } catch (error: any) {
       console.error("Career guide chat error:", error);
-      res.status(500).json({ message: error.message });
+      if (error.status === 429) {
+        // Rate limit error - fallback response already handled
+        res.json({ message: error.message });
+      } else {
+        res.status(500).json({ 
+          message: "We're experiencing high demand. Please try again in a few moments." 
+        });
+      }
     }
   });
 

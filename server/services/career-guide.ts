@@ -103,18 +103,28 @@ export async function generateCareerAdvice(userMessage: string): Promise<string>
       max_tokens: 500
     });
 
-    return completion.choices[0].message.content || "I apologize, but I couldn't generate a response at this time.";
-  } catch (error) {
+    if (!completion.choices[0].message.content) {
+      throw new Error("No response from OpenAI");
+    }
+
+    return completion.choices[0].message.content;
+  } catch (error: any) {
     console.error("Error generating career advice:", error);
 
-    // Provide relevant fallback responses based on keywords in the user's message
-    const message = userMessage.toLowerCase();
-    if (message.includes("skill") || message.includes("learn")) {
-      return FALLBACK_RESPONSES.skills;
-    } else if (message.includes("certif") || message.includes("course")) {
-      return FALLBACK_RESPONSES.certifications;
-    } else {
-      return FALLBACK_RESPONSES.general;
+    // Handle specific error types
+    if (error.status === 429) { // Rate limit error
+      // Provide relevant fallback responses based on keywords in the user's message
+      const message = userMessage.toLowerCase();
+      if (message.includes("skill") || message.includes("learn")) {
+        return FALLBACK_RESPONSES.skills;
+      } else if (message.includes("certif") || message.includes("course")) {
+        return FALLBACK_RESPONSES.certifications;
+      } else {
+        return FALLBACK_RESPONSES.general;
+      }
     }
+
+    // For other errors, throw to be handled by the route handler
+    throw new Error("Unable to process your request at the moment. Please try again later.");
   }
 }
