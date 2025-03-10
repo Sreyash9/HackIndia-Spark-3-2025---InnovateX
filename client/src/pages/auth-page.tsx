@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 const registerFormSchema = insertUserSchema.extend({
   role: z.enum(["freelancer", "business"]),
@@ -24,6 +25,8 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [skillInput, setSkillInput] = useState("");
   const { toast } = useToast();
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
   const loginForm = useForm({
     defaultValues: {
@@ -61,7 +64,6 @@ export default function AuthPage() {
       toast({
         title: "Registration successful!",
         description: "You have successfully registered.",
-        variant: "success",
       });
     } catch (error: any) {
       const message = error.response?.data?.message || error.message;
@@ -122,7 +124,26 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" {...field} autoComplete="current-password" />
+                              <div className="relative">
+                                <Input 
+                                  type={showLoginPassword ? "text" : "password"} 
+                                  {...field} 
+                                  autoComplete="current-password" 
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                                >
+                                  {showLoginPassword ? (
+                                    <EyeOff className="h-4 w-4" />
+                                  ) : (
+                                    <Eye className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -186,7 +207,26 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" {...field} autoComplete="new-password" />
+                              <div className="relative">
+                                <Input 
+                                  type={showRegisterPassword ? "text" : "password"} 
+                                  {...field} 
+                                  autoComplete="new-password" 
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                                >
+                                  {showRegisterPassword ? (
+                                    <EyeOff className="h-4 w-4" />
+                                  ) : (
+                                    <Eye className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
