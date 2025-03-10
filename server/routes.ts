@@ -136,6 +136,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+  // Add this to the existing routes in registerRoutes function
+  app.get("/api/freelancers", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "business") {
+      return res.status(403).json({ message: "Only businesses can view freelancers" });
+    }
+
+    try {
+      const freelancers = await storage.getFreelancers(); // Assuming storage.getFreelancers() exists
+      res.json(freelancers);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching freelancers" });
+    }
+  });
+
   // Razorpay payment routes
   app.post("/api/create-order", async (req, res) => {
     try {

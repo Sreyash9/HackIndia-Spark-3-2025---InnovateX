@@ -37,9 +37,14 @@ export default function Navbar() {
                 <Button variant="ghost">Browse Jobs</Button>
               </Link>
               {user.role === "business" && (
-                <Link href="/post-job">
-                  <Button variant="ghost">Post a Job</Button>
-                </Link>
+                <>
+                  <Link href="/post-job">
+                    <Button variant="ghost">Post a Job</Button>
+                  </Link>
+                  <Link href="/hire">
+                    <Button variant="ghost">Hire Freelancers</Button>
+                  </Link>
+                </>
               )}
               {user.role === "freelancer" && (
                 <Link href="/portfolio">
