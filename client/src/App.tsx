@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
+import CareerGuide from "@/pages/career-guide"; // Added import
 
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
@@ -44,6 +45,9 @@ function Router() {
       )} />
       <Route path="/job-requests" component={() => (
         <ProtectedRoute path="/job-requests" component={JobRequests} />
+      )} />
+      <Route path="/career-guide" component={() => ( // Added route
+        <ProtectedRoute path="/career-guide" component={CareerGuide} />
       )} />
       <Route component={NotFound} />
     </Switch>

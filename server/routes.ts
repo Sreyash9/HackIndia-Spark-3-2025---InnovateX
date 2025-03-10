@@ -246,6 +246,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add this route after the existing routes
+  app.post("/api/career-guide/chat", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const { message } = req.body;
+      if (!message) {
+        return res.status(400).json({ message: "Message is required" });
+      }
+
+      const response = await generateCareerAdvice(message);
+      res.json({ message: response });
+    } catch (error: any) {
+      console.error("Career guide chat error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Add this route to the existing routes in registerRoutes function
   app.get("/api/jobs/:jobId/recommended-freelancers", async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "business") {

@@ -10,6 +10,7 @@ import {
 } from "./dropdown-menu";
 import { Avatar, AvatarFallback } from "./avatar";
 import { Settings } from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 export default function Navbar() {
   const { user, logoutMutation } = useAuth();
@@ -35,6 +36,12 @@ export default function Navbar() {
             <div className="flex space-x-4">
               <Link href="/jobs">
                 <Button variant="ghost">Browse Jobs</Button>
+              </Link>
+              <Link href="/career-guide">
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Career Guide
+                </Button>
               </Link>
               {user.role === "business" && (
                 <>
