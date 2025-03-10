@@ -193,8 +193,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         coverLetter: "Job offer from business",
         proposedRate: job.budget,
         status: "pending_freelancer",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       }, freelancerId);
 
       res.status(201).json(proposal);
@@ -204,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update proposal status (for freelancer accepting/rejecting job requests)
+  // Consolidate proposal update routes into a single handler
   app.patch("/api/proposals/:id", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -213,27 +211,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const proposalId = parseInt(req.params.id);
     const { status } = req.body;
 
-    if (!["applied", "under_review", "approved", "rejected", "waitlist", "pending_freelancer"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
-    }
-
-    try {
-      const proposal = await storage.updateProposal(proposalId, { status });
-      res.json(proposal);
-    } catch (error) {
-      res.status(500).json({ message: "Error updating proposal" });
-    }
-  });
-
-  app.patch("/api/proposals/:id", async (req, res) => {
-    if (!req.isAuthenticated() || req.user.role !== "business") {
-      return res.status(403).json({ message: "Only businesses can update proposals" });
-    }
-
-    const proposalId = parseInt(req.params.id);
-    const { status } = req.body;
-
-    if (!["applied", "under_review", "approved", "rejected", "waitlist"].includes(status)) {
+    const validStatuses = ["applied", "under_review", "approved", "rejected", "waitlist", "pending_freelancer"];
+    if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
 

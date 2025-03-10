@@ -110,7 +110,7 @@ export class DatabaseStorage implements IStorage {
       .values({
         ...proposal,
         freelancerId,
-        status: "applied",
+        status: "pending_freelancer",
         createdAt: new Date(),
         updatedAt: new Date(),
       })
