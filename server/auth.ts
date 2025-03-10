@@ -80,10 +80,17 @@ export function setupAuth(app: Express) {
         bio: req.body.bio || null,
         hourlyRate: req.body.hourlyRate === "" ? null : req.body.hourlyRate,
         company: req.body.company || null,
+        portfolioTitle: null,
+        portfolioSummary: null,
+        portfolioProjects: [],
+        education: [],
+        workExperience: [],
+        certifications: [],
       });
 
       const existingUser = await storage.getUserByUsername(userData.username);
       if (existingUser) {
+        console.log("Registration failed: Username already exists:", userData.username);
         return res.status(400).json({ message: "Username already exists" });
       }
 
@@ -91,6 +98,8 @@ export function setupAuth(app: Express) {
         ...userData,
         password: await hashPassword(userData.password),
       });
+
+      console.log("User successfully created:", { id: user.id, username: user.username });
 
       req.login(user, (err) => {
         if (err) {
@@ -112,17 +121,8 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
-      if (err) return next(err);
-      if (!user) {
-        return res.status(401).json({ message: info?.message || "Authentication failed" });
-      }
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.json(user);
-      });
-    })(req, res, next);
+  app.post("/api/login", passport.authenticate("local"), (req, res) => {
+    res.status(200).json(req.user);
   });
 
   app.post("/api/logout", (req, res, next) => {
