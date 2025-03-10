@@ -46,6 +46,11 @@ export default function Navbar() {
                   <Button variant="ghost">My Portfolio</Button>
                 </Link>
               )}
+              {user.role === "admin" && (
+                <Link href="/admin">
+                  <Button variant="ghost">Admin Dashboard</Button>
+                </Link>
+              )}
             </div>
           </div>
 
@@ -72,6 +77,11 @@ export default function Navbar() {
                 {user.role === "freelancer" && (
                   <DropdownMenuItem asChild>
                     <Link href="/portfolio">My Portfolio</Link>
+                  </DropdownMenuItem>
+                )}
+                {user.role === "admin" && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">Admin Dashboard</Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>

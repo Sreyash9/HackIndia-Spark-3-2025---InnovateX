@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertJobSchema, insertProposalSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 import Razorpay from "razorpay";
+import { hashPassword } from "./utils"; // Assuming hashPassword function exists in ./utils
 
 if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
   throw new Error('Missing required Razorpay credentials: RAZORPAY_KEY_ID and/or RAZORPAY_KEY_SECRET');
@@ -18,19 +19,69 @@ const razorpay = new Razorpay({
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
+  // Add the admin account creation route
+  app.post("/api/admin/setup", async (req, res) => {
+    try {
+      // Check if admin already exists
+      const existingAdmin = await storage.getUserByUsername("sreyashsunilnaik@gmail.com");
+      if (existingAdmin) {
+        return res.status(400).json({ message: "Admin account already exists" });
+      }
+
+      // Create admin user
+      const user = await storage.createUser({
+        username: "sreyashsunilnaik@gmail.com",
+        password: await hashPassword("sre123"),
+        role: "admin",
+        displayName: "Sreyash Admin",
+        bio: null,
+        skills: [],
+        hourlyRate: null,
+        company: null,
+        portfolioTitle: null,
+        portfolioSummary: null,
+        portfolioProjects: null,
+        education: null,
+        workExperience: null,
+        certifications: null,
+      });
+
+      res.status(201).json({ message: "Admin account created successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Admin routes
+  app.get("/api/admin/users", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    const users = await storage.getAllUsers();
+    res.json(users);
+  });
+
+  app.get("/api/admin/jobs", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    const jobs = await storage.getAllJobs();
+    res.json(jobs);
+  });
+
   // User routes
   app.patch("/api/users/:id", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if (req.user.id !== parseInt(req.params.id)) {
+    if (req.user.id !== parseInt(req.params.id) && req.user.role !== "admin") {
       return res.status(403).json({ message: "Forbidden" });
     }
 
     try {
       const updateData = insertUserSchema.partial().parse(req.body);
-      const updatedUser = await storage.updateUser(req.user.id, updateData);
+      const updatedUser = await storage.updateUser(parseInt(req.params.id), updateData);
       res.json(updatedUser);
     } catch (error) {
       res.status(400).json({ message: "Invalid user data" });

@@ -6,7 +6,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role", { enum: ["freelancer", "business"] }).notNull(),
+  role: text("role", { enum: ["freelancer", "business", "admin"] }).notNull(),
   displayName: text("display_name").notNull(),
   bio: text("bio"),
   skills: text("skills").array(),
@@ -58,7 +58,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 }).extend({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["freelancer", "business"]),
+  role: z.enum(["freelancer", "business", "admin"]),
   displayName: z.string().min(2, "Display name must be at least 2 characters"),
   bio: z.string().nullable(),
   skills: z.array(z.string()).optional().default([]),
