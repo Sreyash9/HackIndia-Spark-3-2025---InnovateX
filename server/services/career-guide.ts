@@ -30,6 +30,67 @@ For skill recommendations:
 
 Always maintain a professional yet encouraging tone.`;
 
+const FALLBACK_RESPONSES = {
+  general: `I'm currently experiencing some technical limitations, but I can provide some general career advice:
+
+1. Focus on in-demand skills like:
+   - Full-stack development
+   - Cloud computing (AWS, Azure, GCP)
+   - Data Science & AI/ML
+   - DevOps & CI/CD
+
+2. Recommended certifications:
+   - AWS Certified Developer
+   - Microsoft Azure Fundamentals
+   - Google Cloud Associate Engineer
+   - CompTIA Security+
+
+3. Learning platforms:
+   - Coursera
+   - Udemy
+   - freeCodeCamp
+   - LinkedIn Learning
+
+Would you like to know more about any of these areas?`,
+
+  skills: `Here are some key technical skills that are currently in high demand:
+
+1. Programming Languages:
+   - JavaScript/TypeScript
+   - Python
+   - Java
+   - Go
+
+2. Frameworks:
+   - React/Next.js
+   - Node.js
+   - Django/Flask
+   - Spring Boot
+
+3. Tools & Technologies:
+   - Docker & Kubernetes
+   - Git
+   - CI/CD tools
+   - Cloud Platforms`,
+
+  certifications: `Popular technology certifications that can boost your career:
+
+1. Cloud:
+   - AWS Solutions Architect
+   - Google Cloud Professional
+   - Azure Administrator
+
+2. Development:
+   - Oracle Java Certification
+   - MongoDB Developer
+   - Kubernetes Application Developer
+
+3. Project Management:
+   - PMP
+   - Scrum Master
+   - PRINCE2`
+};
+
 export async function generateCareerAdvice(userMessage: string): Promise<string> {
   try {
     const completion = await openai.chat.completions.create({
@@ -45,6 +106,15 @@ export async function generateCareerAdvice(userMessage: string): Promise<string>
     return completion.choices[0].message.content || "I apologize, but I couldn't generate a response at this time.";
   } catch (error) {
     console.error("Error generating career advice:", error);
-    throw new Error("Failed to generate career advice. Please try again later.");
+
+    // Provide relevant fallback responses based on keywords in the user's message
+    const message = userMessage.toLowerCase();
+    if (message.includes("skill") || message.includes("learn")) {
+      return FALLBACK_RESPONSES.skills;
+    } else if (message.includes("certif") || message.includes("course")) {
+      return FALLBACK_RESPONSES.certifications;
+    } else {
+      return FALLBACK_RESPONSES.general;
+    }
   }
 }
