@@ -186,19 +186,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Invalid job" });
       }
 
-      // Create a proposal with the freelancer as the target
+      // Create a proposal
       const proposal = await storage.createProposal({
         jobId,
+        freelancerId,
         coverLetter: "Job offer from business",
         proposedRate: job.budget,
-        freelancerId,
         status: "pending_freelancer",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }, freelancerId);
 
       res.status(201).json(proposal);
     } catch (error) {
+      console.error("Error creating job request:", error);
       res.status(500).json({ message: "Error creating job request" });
     }
   });
