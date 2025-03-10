@@ -15,9 +15,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 
-const registerFormSchema = insertUserSchema.extend({
-  role: z.enum(["freelancer", "business"]),
-});
+const registerFormSchema = insertUserSchema;
 
 type RegisterFormData = z.infer<typeof registerFormSchema>;
 
@@ -46,6 +44,12 @@ export default function AuthPage() {
       skills: [],
       hourlyRate: null,
       company: null,
+      portfolioTitle: null,
+      portfolioSummary: null,
+      portfolioProjects: null,
+      education: null,
+      workExperience: null,
+      certifications: null,
     },
   });
 
@@ -173,7 +177,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>I am a</FormLabel>
                             <Select
-                              onValueChange={(value) => {
+                              onValueChange={(value: "freelancer" | "business") => {
                                 field.onChange(value);
                                 // Clear role-specific fields when switching roles
                                 if (value === "freelancer") {
@@ -251,7 +255,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Display Name</FormLabel>
                             <FormControl>
-                              <Input {...field} autoComplete="name" />
+                              <Input {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -265,7 +269,11 @@ export default function AuthPage() {
                             <FormItem>
                               <FormLabel>Company Name</FormLabel>
                               <FormControl>
-                                <Input {...field} onChange={(e) => field.onChange(e.target.value || null)} value={field.value ?? ''} />
+                                <Input 
+                                  {...field} 
+                                  value={field.value || ''} 
+                                  onChange={(e) => field.onChange(e.target.value || null)} 
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -285,66 +293,68 @@ export default function AuthPage() {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={registerForm.control}
-                        name="skills"
-                        render={() => (
-                          <FormItem>
-                            <FormLabel>Skills (Optional)</FormLabel>
-                            <FormControl>
-                              <Input
-                                value={skillInput}
-                                onChange={(e) => setSkillInput(e.target.value)}
-                                onKeyDown={addSkill}
-                                placeholder="Type a skill and press Enter"
-                              />
-                            </FormControl>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {registerForm.watch("skills")?.map((skill, index) => (
-                                <div
-                                  key={index}
-                                  className="bg-secondary text-secondary-foreground px-2 py-1 rounded-md flex items-center gap-1"
-                                >
-                                  {skill}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const currentSkills = registerForm.getValues("skills") || [];
-                                      registerForm.setValue(
-                                        "skills",
-                                        currentSkills.filter((_, i) => i !== index)
-                                      );
-                                    }}
-                                    className="text-sm hover:text-destructive"
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                       {registerForm.watch("role") === "freelancer" && (
-                        <FormField
-                          control={registerForm.control}
-                          name="hourlyRate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Hourly Rate (USD)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  {...field}
-                                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                                  value={field.value ?? ''}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <>
+                          <FormField
+                            control={registerForm.control}
+                            name="skills"
+                            render={() => (
+                              <FormItem>
+                                <FormLabel>Skills (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    value={skillInput}
+                                    onChange={(e) => setSkillInput(e.target.value)}
+                                    onKeyDown={addSkill}
+                                    placeholder="Type a skill and press Enter"
+                                  />
+                                </FormControl>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {registerForm.watch("skills")?.map((skill: string, index: number) => (
+                                    <div
+                                      key={index}
+                                      className="bg-secondary text-secondary-foreground px-2 py-1 rounded-md flex items-center gap-1"
+                                    >
+                                      {skill}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const currentSkills = registerForm.getValues("skills") || [];
+                                          registerForm.setValue(
+                                            "skills",
+                                            currentSkills.filter((_, i) => i !== index)
+                                          );
+                                        }}
+                                        className="text-sm hover:text-destructive"
+                                      >
+                                        ×
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={registerForm.control}
+                            name="hourlyRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Hourly Rate (USD)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    {...field}
+                                    value={field.value || ''}
+                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </>
                       )}
                       <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
                         {registerMutation.isPending ? "Creating account..." : "Register"}
