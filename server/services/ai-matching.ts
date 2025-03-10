@@ -22,24 +22,24 @@ export async function calculateJobMatch(
   try {
     const prompt = `
       Analyze the compatibility between a job and a freelancer profile.
-      
+
       Job Details:
       Description: ${jobDescription}
       Required Skills: ${jobSkills.join(", ")}
-      
+
       Freelancer Profile:
       Bio: ${freelancerBio}
       Skills: ${freelancerSkills.join(", ")}
-      
+
       Provide a JSON response with:
       1. A match score from 0 to 100
       2. A brief explanation of the score
-      
+
       Focus on:
       - Skill match percentage
       - Experience relevance
       - Project requirements alignment
-      
+
       Return only the JSON object with "score" and "explanation" keys.
     `;
 
@@ -49,6 +49,10 @@ export async function calculateJobMatch(
       response_format: { type: "json_object" },
     });
 
+    if (!completion.choices[0].message.content) {
+      throw new Error("No response from OpenAI");
+    }
+
     const response = JSON.parse(completion.choices[0].message.content);
     return {
       score: response.score,
@@ -56,9 +60,19 @@ export async function calculateJobMatch(
     };
   } catch (error) {
     console.error("Error calculating job match:", error);
+
+    // Fallback: Calculate a basic match score based on skill overlap
+    const matchingSkills = jobSkills.filter(skill => 
+      freelancerSkills.includes(skill)
+    );
+
+    const skillMatchPercentage = jobSkills.length > 0 
+      ? (matchingSkills.length / jobSkills.length) * 100
+      : 0;
+
     return {
-      score: 0,
-      explanation: "Failed to calculate match score",
+      score: Math.round(skillMatchPercentage),
+      explanation: `Basic match based on ${matchingSkills.length} overlapping skills`,
     };
   }
 }
@@ -73,11 +87,11 @@ export async function getTopMatches(
     freelancers.map(async (freelancer) => {
       const match = await calculateJobMatch(
         job.description,
-        job.skills,
+        job.skills || [],
         freelancer.bio || "",
         freelancer.skills || []
       );
-      
+
       return {
         freelancer,
         score: match.score,
