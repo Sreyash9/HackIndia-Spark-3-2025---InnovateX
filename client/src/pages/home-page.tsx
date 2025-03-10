@@ -92,7 +92,7 @@ export default function HomePage() {
                           {proposal.freelancer?.displayName?.[0]?.toUpperCase()}
                         </div>
                         <div>
-                          <h3 className="font-semibold">Proposal #{proposal.id}</h3>
+                          <h3 className="font-semibold">{proposal.job?.title}</h3>
                           <p className="text-sm text-gray-600">
                             by {proposal.freelancer?.displayName}
                           </p>

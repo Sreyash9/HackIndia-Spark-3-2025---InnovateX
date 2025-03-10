@@ -88,16 +88,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       for (const jobId of jobIds) {
         const jobProposals = await storage.getProposalsByJob(jobId);
+        const job = await storage.getJob(jobId);
         // Get freelancer details for each proposal
         const proposalsWithFreelancers = await Promise.all(
           jobProposals.map(async (proposal) => {
             const freelancer = await storage.getUser(proposal.freelancerId);
             return {
               ...proposal,
+              job: {
+                title: job?.title,
+                description: job?.description,
+              },
               freelancer: {
                 displayName: freelancer?.displayName,
                 username: freelancer?.username,
-                // Add any other needed freelancer details
               }
             };
           })
