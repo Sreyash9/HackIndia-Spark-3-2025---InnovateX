@@ -1,5 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
@@ -41,6 +42,7 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Local Strategy
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       const user = await storage.getUserByUsername(username);
@@ -52,6 +54,42 @@ export function setupAuth(app: Express) {
     })
   );
 
+  // Google Strategy
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    passport.use(
+      new GoogleStrategy(
+        {
+          clientID: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          callbackURL: "/api/auth/google/callback",
+        },
+        async (accessToken, refreshToken, profile, done) => {
+          try {
+            let user = await storage.getUserByUsername(profile.emails![0].value);
+
+            if (!user) {
+              // Create a new user from Google profile
+              user = await storage.createUser({
+                username: profile.emails![0].value,
+                password: await hashPassword(randomBytes(32).toString("hex")), // Random password for Google users
+                role: "freelancer", // Default role
+                displayName: profile.displayName,
+                bio: null,
+                skills: [],
+                hourlyRate: null,
+                company: null,
+              });
+            }
+
+            return done(null, user);
+          } catch (error) {
+            return done(error as Error);
+          }
+        }
+      )
+    );
+  }
+
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
     const user = await storage.getUser(id);
@@ -61,7 +99,7 @@ export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res, next) => {
     try {
       const userData = insertUserSchema.parse(req.body);
-      
+
       const existingUser = await storage.getUserByUsername(userData.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
@@ -84,6 +122,20 @@ export function setupAuth(app: Express) {
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
     res.status(200).json(req.user);
   });
+
+  // Google OAuth routes
+  app.get(
+    "/api/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+  );
+
+  app.get(
+    "/api/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/auth" }),
+    (req, res) => {
+      res.redirect("/");
+    }
+  );
 
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
