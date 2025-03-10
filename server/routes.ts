@@ -77,6 +77,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(proposals);
   });
 
+  app.get("/api/business/:businessId/proposals", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "business") {
+      return res.status(403).json({ message: "Only businesses can view their proposals" });
+    }
+
+    try {
+      const jobIds = (await storage.getJobs()).filter(job => job.businessId === req.user.id).map(job => job.id);
+      const proposals = [];
+
+      for (const jobId of jobIds) {
+        const jobProposals = await storage.getProposalsByJob(jobId);
+        proposals.push(...jobProposals);
+      }
+
+      res.json(proposals);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching proposals" });
+    }
+  });
+
+  app.patch("/api/proposals/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "business") {
+      return res.status(403).json({ message: "Only businesses can update proposals" });
+    }
+
+    const proposalId = parseInt(req.params.id);
+    const { status } = req.body;
+
+    if (!["applied", "under_review", "approved", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    try {
+      const proposal = await storage.updateProposal(proposalId, { status });
+      res.json(proposal);
+    } catch (error) {
+      res.status(500).json({ message: "Error updating proposal" });
+    }
+  });
+
+
   // Razorpay payment routes
   app.post("/api/create-order", async (req, res) => {
     try {

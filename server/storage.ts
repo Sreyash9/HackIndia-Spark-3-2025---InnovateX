@@ -25,6 +25,7 @@ export interface IStorage {
   createProposal(proposal: Omit<Proposal, "id" | "status">, freelancerId: number): Promise<Proposal>;
   getProposalsByJob(jobId: number): Promise<Proposal[]>;
   getProposalsByFreelancer(freelancerId: number): Promise<Proposal[]>;
+  updateProposal(id: number, updates: Partial<Proposal>): Promise<Proposal>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -116,6 +117,18 @@ export class DatabaseStorage implements IStorage {
 
   async getProposalsByFreelancer(freelancerId: number): Promise<Proposal[]> {
     return await db.select().from(proposals).where(eq(proposals.freelancerId, freelancerId));
+  }
+
+  async updateProposal(id: number, updates: Partial<Proposal>): Promise<Proposal> {
+    const [proposal] = await db
+      .update(proposals)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(proposals.id, id))
+      .returning();
+    return proposal;
   }
 }
 

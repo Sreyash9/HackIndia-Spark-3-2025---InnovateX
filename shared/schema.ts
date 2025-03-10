@@ -91,7 +91,11 @@ export const proposals = pgTable("proposals", {
   freelancerId: integer("freelancer_id").notNull(),
   coverLetter: text("cover_letter").notNull(),
   proposedRate: integer("proposed_rate").notNull(),
-  status: text("status", { enum: ["pending", "accepted", "rejected"] }).notNull().default("pending"),
+  status: text("status", { 
+    enum: ["applied", "under_review", "approved", "rejected"] 
+  }).notNull().default("applied"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at"),
 });
 
 export const insertJobSchema = createInsertSchema(jobs).pick({
