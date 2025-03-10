@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { z } from "zod";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 const registerFormSchema = insertUserSchema.extend({
   role: z.enum(["freelancer", "business"]),
@@ -23,6 +24,7 @@ type RegisterFormData = z.infer<typeof registerFormSchema>;
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [skillInput, setSkillInput] = useState("");
+  const { toast } = useToast();
 
   const loginForm = useForm({
     defaultValues: {
@@ -51,6 +53,25 @@ export default function AuthPage() {
       const currentSkills = registerForm.getValues("skills") || [];
       registerForm.setValue("skills", [...currentSkills, skillInput.trim()]);
       setSkillInput("");
+    }
+  };
+
+  const onRegisterSubmit = async (data: RegisterFormData) => {
+    try {
+      await registerMutation.mutateAsync(data);
+      toast({
+        title: "Registration successful!",
+        description: "You have successfully registered.",
+        variant: "success",
+      });
+
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.message;
+      toast({
+        title: "Registration failed",
+        description: message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -90,7 +111,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Username</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input {...field} autoComplete="username" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -103,7 +124,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" {...field} />
+                              <Input type="password" {...field} autoComplete="current-password" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -201,7 +222,7 @@ export default function AuthPage() {
                   </div>
 
                   <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4">
+                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                       <FormField
                         control={registerForm.control}
                         name="role"
@@ -230,7 +251,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Username</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input {...field} autoComplete="username" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -243,7 +264,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                              <Input type="password" {...field} />
+                              <Input type="password" {...field} autoComplete="new-password" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -256,7 +277,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Display Name</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input {...field} autoComplete="name" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

@@ -46,11 +46,14 @@ export function setupAuth(app: Express) {
   // Local Strategy
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      const user = await storage.getUserByUsername(username);
-      if (!user || !(await comparePasswords(password, user.password))) {
-        return done(null, false);
-      } else {
+      try {
+        const user = await storage.getUserByUsername(username);
+        if (!user || !(await comparePasswords(password, user.password))) {
+          return done(null, false, { message: "Invalid username or password" });
+        }
         return done(null, user);
+      } catch (error) {
+        return done(error);
       }
     }),
   );
@@ -63,6 +66,7 @@ export function setupAuth(app: Express) {
           clientID: process.env.GOOGLE_CLIENT_ID,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
           callbackURL: "/api/auth/google/callback",
+          proxy: true
         },
         async (accessToken, refreshToken, profile, done) => {
           try {
@@ -84,7 +88,7 @@ export function setupAuth(app: Express) {
 
             return done(null, user);
           } catch (error) {
-            return done(error as Error);
+            return done(error);
           }
         }
       )
@@ -93,17 +97,26 @@ export function setupAuth(app: Express) {
 
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
-    const user = await storage.getUser(id);
-    done(null, user);
+    try {
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (error) {
+      done(error);
+    }
   });
 
-  app.post("/api/register", async (req, res, next) => {
+  app.post("/api/register", async (req, res) => {
     try {
+      console.log("Registration attempt with data:", {
+        ...req.body,
+        password: '[REDACTED]'
+      });
+
       const userData = insertUserSchema.parse({
         ...req.body,
         skills: req.body.skills || [],
         bio: req.body.bio || null,
-        hourlyRate: req.body.hourlyRate || null,
+        hourlyRate: req.body.hourlyRate === "" ? null : req.body.hourlyRate,
         company: req.body.company || null,
       });
 
@@ -118,10 +131,14 @@ export function setupAuth(app: Express) {
       });
 
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error("Login error after registration:", err);
+          return res.status(500).json({ message: "Error logging in after registration" });
+        }
         res.status(201).json(user);
       });
     } catch (error) {
+      console.error("Registration error:", error);
       if (error instanceof ZodError) {
         const errors = error.errors.map(err => ({
           field: err.path.join('.'),
@@ -133,8 +150,17 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
+      if (err) return next(err);
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Authentication failed" });
+      }
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.json(user);
+      });
+    })(req, res, next);
   });
 
   // Google OAuth routes
