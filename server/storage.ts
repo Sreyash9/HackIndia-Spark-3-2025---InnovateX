@@ -1,8 +1,11 @@
-import { InsertUser, User, Job, Proposal, insertJobSchema, insertProposalSchema } from "@shared/schema";
+import { users, jobs, proposals, type User, type InsertUser, type Job, type Proposal } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   sessionStore: session.Store;
@@ -23,87 +26,81 @@ export interface IStorage {
   getProposalsByFreelancer(freelancerId: number): Promise<Proposal[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private jobs: Map<number, Job>;
-  private proposals: Map<number, Proposal>;
+export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
-  private currentId: number;
 
   constructor() {
-    this.users = new Map();
-    this.jobs = new Map();
-    this.proposals = new Map();
-    this.currentId = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true
     });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
-    const user: User = {
-      ...insertUser,
-      id,
-      bio: insertUser.bio ?? null,
-      skills: insertUser.skills ?? null,
-      hourlyRate: insertUser.hourlyRate ?? null,
-      company: insertUser.company ?? null,
-    };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...insertUser,
+        bio: insertUser.bio ?? null,
+        skills: insertUser.skills ?? null,
+        hourlyRate: insertUser.hourlyRate ?? null,
+        company: insertUser.company ?? null,
+      })
+      .returning();
     return user;
   }
 
   async createJob(job: Omit<Job, "id" | "status" | "createdAt">, businessId: number): Promise<Job> {
-    const id = this.currentId++;
-    const newJob: Job = {
-      ...job,
-      id,
-      businessId,
-      status: "open",
-      createdAt: new Date(),
-    };
-    this.jobs.set(id, newJob);
+    const [newJob] = await db
+      .insert(jobs)
+      .values({
+        ...job,
+        businessId,
+        status: "open",
+        createdAt: new Date(),
+      })
+      .returning();
     return newJob;
   }
 
   async getJobs(): Promise<Job[]> {
-    return Array.from(this.jobs.values());
+    return await db.select().from(jobs);
   }
 
   async getJob(id: number): Promise<Job | undefined> {
-    return this.jobs.get(id);
+    const [job] = await db.select().from(jobs).where(eq(jobs.id, id));
+    return job;
   }
 
   async createProposal(proposal: Omit<Proposal, "id" | "status">, freelancerId: number): Promise<Proposal> {
-    const id = this.currentId++;
-    const newProposal: Proposal = {
-      ...proposal,
-      id,
-      freelancerId,
-      status: "pending",
-    };
-    this.proposals.set(id, newProposal);
+    const [newProposal] = await db
+      .insert(proposals)
+      .values({
+        ...proposal,
+        freelancerId,
+        status: "pending",
+      })
+      .returning();
     return newProposal;
   }
 
   async getProposalsByJob(jobId: number): Promise<Proposal[]> {
-    return Array.from(this.proposals.values()).filter(p => p.jobId === jobId);
+    return await db.select().from(proposals).where(eq(proposals.jobId, jobId));
   }
 
   async getProposalsByFreelancer(freelancerId: number): Promise<Proposal[]> {
-    return Array.from(this.proposals.values()).filter(p => p.freelancerId === freelancerId);
+    return await db.select().from(proposals).where(eq(proposals.freelancerId, freelancerId));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
