@@ -1,6 +1,5 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
@@ -57,43 +56,6 @@ export function setupAuth(app: Express) {
       }
     }),
   );
-
-  // Google Strategy
-  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-    passport.use(
-      new GoogleStrategy(
-        {
-          clientID: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          callbackURL: "/api/auth/google/callback",
-          proxy: true
-        },
-        async (accessToken, refreshToken, profile, done) => {
-          try {
-            let user = await storage.getUserByUsername(profile.emails![0].value);
-
-            if (!user) {
-              // Create a new user from Google profile
-              user = await storage.createUser({
-                username: profile.emails![0].value,
-                password: await hashPassword(randomBytes(32).toString("hex")), // Random password for Google users
-                role: "freelancer", // Default role
-                displayName: profile.displayName,
-                bio: null,
-                skills: [],
-                hourlyRate: null,
-                company: null,
-              });
-            }
-
-            return done(null, user);
-          } catch (error) {
-            return done(error);
-          }
-        }
-      )
-    );
-  }
 
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
@@ -162,20 +124,6 @@ export function setupAuth(app: Express) {
       });
     })(req, res, next);
   });
-
-  // Google OAuth routes
-  app.get(
-    "/api/auth/google",
-    passport.authenticate("google", { scope: ["profile", "email"] })
-  );
-
-  app.get(
-    "/api/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/auth" }),
-    (req, res) => {
-      res.redirect("/");
-    }
-  );
 
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
