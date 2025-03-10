@@ -105,7 +105,9 @@ export class DatabaseStorage implements IStorage {
       .values({
         ...proposal,
         freelancerId,
-        status: "pending",
+        status: "applied",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .returning();
     return newProposal;
