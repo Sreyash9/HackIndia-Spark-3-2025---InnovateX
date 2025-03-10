@@ -135,15 +135,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add this route before the Razorpay payment routes
+  app.get("/api/freelancers/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "business") {
+      return res.status(403).json({ message: "Only businesses can view freelancer profiles" });
+    }
 
-  // Add this to the existing routes in registerRoutes function
+    try {
+      const freelancer = await storage.getUser(parseInt(req.params.id));
+      if (!freelancer || freelancer.role !== "freelancer") {
+        return res.status(404).json({ message: "Freelancer not found" });
+      }
+      res.json(freelancer);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching freelancer profile" });
+    }
+  });
+
   app.get("/api/freelancers", async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "business") {
       return res.status(403).json({ message: "Only businesses can view freelancers" });
     }
 
     try {
-      const freelancers = await storage.getFreelancers(); // Assuming storage.getFreelancers() exists
+      const freelancers = await storage.getFreelancers(); 
       res.json(freelancers);
     } catch (error) {
       res.status(500).json({ message: "Error fetching freelancers" });
@@ -155,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { amount } = req.body;
       const options = {
-        amount: Math.round(amount * 100), // amount in smallest currency unit (paise for INR)
+        amount: Math.round(amount * 100), 
         currency: "INR",
         receipt: "order_" + Date.now(),
       };

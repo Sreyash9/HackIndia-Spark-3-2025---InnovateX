@@ -13,10 +13,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertJobSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function FreelancerProfile() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { toast } = useToast();
+
   const form = useForm({
     resolver: zodResolver(insertJobSchema),
     defaultValues: {
@@ -27,9 +31,17 @@ export default function FreelancerProfile() {
     },
   });
 
-  const { data: freelancer, isLoading } = useQuery<User>({
+  const { data: freelancer, isLoading, error } = useQuery<User>({
     queryKey: [`/api/freelancers/${id}`],
-    enabled: !!id && user?.role === "business",
+    enabled: !!id && !!user && user.role === "business",
+    retry: 1,
+    onError: (error: Error) => {
+      toast({
+        title: "Error loading profile",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const offerJobMutation = useMutation({
@@ -42,13 +54,36 @@ export default function FreelancerProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      toast({
+        title: "Success",
+        description: "Job offer sent successfully",
+      });
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error sending job offer",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-destructive">Failed to load profile</h2>
+          <p className="text-muted-foreground">Please try again later</p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading || !freelancer) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
