@@ -172,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add route to create job request
+  // Update route to create job request
   app.post("/api/job-requests", async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "business") {
       return res.status(403).json({ message: "Only businesses can send job requests" });
@@ -193,7 +193,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         freelancerId,
         coverLetter: "Job offer from business",
         proposedRate: job.budget,
-        status: "pending_freelancer",
       }, freelancerId);
 
       res.status(201).json(proposal);
@@ -220,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (req.user.role === "freelancer") {
-        // Freelancers can only accept or reject pending proposals
+        // Freelancers can only accept or reject proposals
         if (!["approved", "rejected"].includes(status)) {
           return res.status(400).json({ message: "Invalid status for freelancer" });
         }

@@ -85,7 +85,7 @@ export default function JobRequests() {
                         <p className="mt-2 font-medium">Budget: ${request.job.budget}</p>
                       </div>
 
-                      {request.status === "pending_freelancer" && (
+                      {request.status === "applied" && (
                         <div className="flex gap-4">
                           <Button 
                             onClick={() => updateRequestMutation.mutate({
@@ -110,7 +110,7 @@ export default function JobRequests() {
                         </div>
                       )}
 
-                      {request.status !== "pending_freelancer" && (
+                      {request.status !== "applied" && (
                         <Badge className={
                           request.status === "approved" ? "bg-green-100 text-green-800" :
                           request.status === "rejected" ? "bg-red-100 text-red-800" :
