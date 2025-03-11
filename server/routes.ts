@@ -6,7 +6,6 @@ import { insertJobSchema, insertProposalSchema, insertUserSchema } from "@shared
 import { z } from "zod";
 import Razorpay from "razorpay";
 import { getTopMatches } from "./services/ai-matching";
-import { generateCareerAdvice } from "./services/career-guide"; // Add this import
 
 if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
   throw new Error('Missing required Razorpay credentials: RAZORPAY_KEY_ID and/or RAZORPAY_KEY_SECRET');
@@ -244,33 +243,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating proposal:", error);
       res.status(500).json({ message: "Error updating proposal" });
-    }
-  });
-
-  // Add this route after the existing routes
-  app.post("/api/career-guide/chat", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    try {
-      const { message } = req.body;
-      if (!message) {
-        return res.status(400).json({ message: "Message is required" });
-      }
-
-      const response = await generateCareerAdvice(message);
-      res.json({ message: response });
-    } catch (error: any) {
-      console.error("Career guide chat error:", error);
-      if (error.status === 429) {
-        // Rate limit error - fallback response already handled
-        res.json({ message: error.message });
-      } else {
-        res.status(500).json({ 
-          message: "We're experiencing high demand. Please try again in a few moments." 
-        });
-      }
     }
   });
 
