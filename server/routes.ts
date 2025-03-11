@@ -214,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       // Get the proposal to check permissions
-      const proposal = await storage.getProposal(proposalId); // Corrected line
+      const proposal = await storage.getProposal(proposalId);
       if (!proposal) {
         return res.status(404).json({ message: "Proposal not found" });
       }
