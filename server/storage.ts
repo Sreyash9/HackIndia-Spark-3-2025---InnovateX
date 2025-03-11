@@ -24,6 +24,7 @@ export interface IStorage {
 
   // Proposal methods
   createProposal(proposal: Omit<Proposal, "id" | "status">, freelancerId: number): Promise<Proposal>;
+  getProposal(id: number): Promise<Proposal | undefined>;
   getProposalsByJob(jobId: number): Promise<Proposal[]>;
   getProposalsByFreelancer(freelancerId: number): Promise<Proposal[]>;
   updateProposal(id: number, updates: Partial<Proposal>): Promise<Proposal>;
@@ -117,6 +118,11 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return newProposal;
+  }
+
+  async getProposal(id: number): Promise<Proposal | undefined> {
+    const [proposal] = await db.select().from(proposals).where(eq(proposals.id, id));
+    return proposal;
   }
 
   async getProposalsByJob(jobId: number): Promise<Proposal[]> {
