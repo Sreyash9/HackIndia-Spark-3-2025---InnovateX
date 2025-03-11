@@ -17,7 +17,7 @@ A dynamic freelancer marketplace that connects businesses with top talent, enhan
 - PostgreSQL (v14 or later)
 - npm or yarn package manager
 
-## Local Development Setup
+## Getting Started
 
 1. Clone the repository:
 ```bash
@@ -55,17 +55,6 @@ npm run dev
 ```
 
 The application will be available at `http://localhost:3000`.
-
-## Running on Replit
-
-1. Create a new Repl and import this repository
-2. Add the required secrets in the Replit Secrets tab:
-   - OPENAI_API_KEY
-   - RAZORPAY_KEY_ID
-   - RAZORPAY_KEY_SECRET
-   - DATABASE_URL (will be auto-configured if using Replit Database)
-   - SESSION_SECRET
-3. Click the "Run" button
 
 ## Environment Variables
 

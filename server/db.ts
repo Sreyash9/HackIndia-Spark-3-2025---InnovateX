@@ -3,25 +3,18 @@ import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "@shared/schema";
 
-// Configure WebSocket for Neon database if running in Replit
-if (process.env.REPL_ID) {
-  neonConfig.webSocketConstructor = ws;
-}
-
 if (!process.env.DATABASE_URL) {
   throw new Error(
     "DATABASE_URL must be set in your environment variables. Check .env.example for the format.",
   );
 }
 
-// Pool configuration with SSL settings for local development
+// Basic pool configuration without Replit-specific settings
 const poolConfig = {
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? 
-    { rejectUnauthorized: true } : 
-    process.env.REPL_ID ? 
-      { rejectUnauthorized: true } : 
-      false
+  ssl: process.env.NODE_ENV === 'production'
+    ? { rejectUnauthorized: true }
+    : false
 };
 
 export const pool = new Pool(poolConfig);
